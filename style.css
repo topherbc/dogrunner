@@ -17,11 +17,18 @@ canvas {
     background-color: #fff;
 }
 
-#score {
+#score, #highScore {
     position: absolute;
-    top: 20px;
     right: 20px;
     font-family: Arial, sans-serif;
     font-size: 24px;
     color: #000;
+}
+
+#score {
+    top: 20px;
+}
+
+#highScore {
+    top: 50px;
 }

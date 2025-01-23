@@ -7,6 +7,9 @@ class Game {
         
         this.score = 0;
         this.scoreElement = document.getElementById('score');
+        this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        this.highScoreElement = document.getElementById('highScore');
+        this.highScoreElement.textContent = `High Score: ${this.highScore}`;
         this.isGameOver = false;
         
         this.background = new Background(this.ctx);
@@ -73,6 +76,12 @@ class Game {
 
     gameOver() {
         this.isGameOver = true;
+        const finalScore = Math.floor(this.score / 10);
+        if (finalScore > this.highScore) {
+            this.highScore = finalScore;
+            localStorage.setItem('highScore', this.highScore);
+            this.highScoreElement.textContent = `High Score: ${this.highScore}`;
+        }
     }
 
     reset() {
