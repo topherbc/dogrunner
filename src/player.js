@@ -1,18 +1,21 @@
 class Player {
     constructor(ctx) {
         this.ctx = ctx;
-        this.width = 60;
-        this.height = 50;
-        this.x = 50;
+        // Scale player size based on canvas size
+        const scale = CANVAS_WIDTH / 800;
+        this.width = Math.floor(60 * scale);
+        this.height = Math.floor(50 * scale);
+        this.x = Math.floor(50 * scale);
         this.y = CANVAS_HEIGHT - GROUND_HEIGHT - this.height;
         this.velocityY = 0;
         this.isJumping = false;
         this.sprite = new DogSprite(ctx);
     }
 
-    jump() {
+    jump(customJumpForce) {
         if (!this.isJumping) {
-            this.velocityY = JUMP_FORCE;
+            // Use custom jump force if provided, otherwise use default
+            this.velocityY = customJumpForce || JUMP_FORCE;
             this.isJumping = true;
         }
     }

@@ -2,9 +2,11 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.setCanvasSize();
+        this.canvas.width = CANVAS_WIDTH;
+        this.canvas.height = CANVAS_HEIGHT;
         
         this.score = 0;
+        this.touchStartTime = 0;
         this.scoreElement = document.getElementById('score');
         this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
         this.highScoreElement = document.getElementById('highScore');
@@ -16,48 +18,7 @@ class Game {
         this.obstacleManager = new ObstacleManager(this.ctx);
         
         this.setupEventListeners();
-        this.setupResizeHandler();
         this.gameLoop();
-    }
-
-    setCanvasSize() {
-        const isMobile = window.matchMedia("(max-width: 767px)").matches;
-        const isTablet = window.matchMedia("(min-width: 768px) and (max-width: 1024px)").matches;
-        
-        let baseWidth;
-        if (isMobile) {
-            baseWidth = 300;
-        } else if (isTablet) {
-            baseWidth = 600;
-        } else {
-            baseWidth = 800;
-        }
-        
-        // Maintain original aspect ratio (800:300)
-        const aspectRatio = 300/800;
-        this.canvas.width = baseWidth;
-        this.canvas.height = Math.floor(baseWidth * aspectRatio);
-        
-        // Update size-dependent constants
-        const scale = baseWidth / 800; // Scale factor based on original width
-        CANVAS_WIDTH = this.canvas.width;
-        CANVAS_HEIGHT = this.canvas.height;
-        GROUND_HEIGHT = Math.floor(30 * scale);
-        GRAVITY = 0.5 * scale;
-        JUMP_FORCE = -12 * scale;
-        GAME_SPEED = 5 * scale;
-    }
-
-    setupResizeHandler() {
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                this.setCanvasSize();
-                this.background = new Background(this.ctx);
-                this.obstacleManager.reset();
-            }, 200);
-        });
     }
 
     setupEventListeners() {
@@ -73,25 +34,33 @@ class Game {
             }
         });
 
-        // Touch controls
-        this.canvas.addEventListener('touchstart', (event) => {
+        // Touch and mouse controls with high/low jumps
+        const handleTouchStart = (event) => {
+            event.preventDefault();
             if (this.isGameOver) {
                 this.reset();
             } else {
-                this.player.jump();
+                this.touchStartTime = Date.now();
             }
-            event.preventDefault();
-        });
+        };
 
-        // Mouse click controls
-        this.canvas.addEventListener('click', (event) => {
-            if (this.isGameOver) {
-                this.reset();
-            } else {
-                this.player.jump();
-            }
+        const handleTouchEnd = (event) => {
             event.preventDefault();
-        });
+            if (!this.isGameOver) {
+                const touchDuration = Date.now() - this.touchStartTime;
+                // Long press (>200ms) for high jump, short press for low jump
+                const jumpForce = touchDuration > 200 ? JUMP_FORCE * 1.3 : JUMP_FORCE * 0.7;
+                this.player.jump(jumpForce);
+            }
+        };
+
+        // Touch events
+        this.canvas.addEventListener('touchstart', handleTouchStart);
+        this.canvas.addEventListener('touchend', handleTouchEnd);
+
+        // Mouse events
+        this.canvas.addEventListener('mousedown', handleTouchStart);
+        this.canvas.addEventListener('mouseup', handleTouchEnd);
     }
 
     update() {
@@ -127,11 +96,18 @@ class Game {
         // Draw game over text
         if (this.isGameOver) {
             this.ctx.fillStyle = 'black';
-            this.ctx.font = '48px Arial';
+            this.ctx.font = `${Math.floor(CANVAS_WIDTH * 0.06)}px Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.fillText('Game Over', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-            this.ctx.font = '24px Arial';
-            this.ctx.fillText('Press Space or Click to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+            
+            this.ctx.font = `${Math.floor(CANVAS_WIDTH * 0.03)}px Arial`;
+            if (window.matchMedia('(max-width: 767px)').matches) {
+                this.ctx.fillText('Tap to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + CANVAS_HEIGHT * 0.1);
+                this.ctx.fillText('Quick tap = Low Jump', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + CANVAS_HEIGHT * 0.2);
+                this.ctx.fillText('Long tap = High Jump', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + CANVAS_HEIGHT * 0.3);
+            } else {
+                this.ctx.fillText('Press Space or Click to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + CANVAS_HEIGHT * 0.1);
+            }
         }
     }
 

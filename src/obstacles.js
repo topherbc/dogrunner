@@ -1,7 +1,8 @@
 class Obstacle {
     constructor(ctx, x) {
         this.ctx = ctx;
-        this.width = 40;
+        const scale = CANVAS_WIDTH / 800;
+        this.width = Math.floor(40 * scale);
         this.x = x;
         this.sprite = new ObstacleSprite(ctx);
     }
@@ -23,7 +24,8 @@ class Obstacle {
 class BushObstacle extends Obstacle {
     constructor(ctx, x) {
         super(ctx, x);
-        this.height = random(40, 60);
+        const scale = CANVAS_WIDTH / 800;
+        this.height = random(Math.floor(40 * scale), Math.floor(60 * scale));
         this.y = CANVAS_HEIGHT - GROUND_HEIGHT - this.height;
     }
 
@@ -44,8 +46,9 @@ class BushObstacle extends Obstacle {
 class BirdObstacle extends Obstacle {
     constructor(ctx, x) {
         super(ctx, x);
-        this.width = 50;
-        this.height = 30;
+        const scale = CANVAS_WIDTH / 800;
+        this.width = Math.floor(50 * scale);
+        this.height = Math.floor(30 * scale);
         this.y = random(CANVAS_HEIGHT/3, CANVAS_HEIGHT/2);
         this.startY = this.y;
         this.time = 0;
@@ -54,8 +57,9 @@ class BirdObstacle extends Obstacle {
     update() {
         super.update();
         this.time += 1;
-        // Add slight vertical movement
-        this.y = this.startY + Math.sin(this.time/30) * 15;
+        // Add slight vertical movement scaled to canvas size
+        const scale = CANVAS_WIDTH / 800;
+        this.y = this.startY + Math.sin(this.time/30) * (15 * scale);
     }
 
     draw() {
@@ -77,7 +81,8 @@ class ObstacleManager {
         this.ctx = ctx;
         this.obstacles = [];
         this.spawnTimer = 0;
-        this.spawnInterval = 60;
+        // Scale spawn interval based on game speed to maintain consistent difficulty
+        this.spawnInterval = Math.floor(60 * (CANVAS_WIDTH / 800));
     }
 
     update() {
