@@ -82,6 +82,16 @@ class Game {
             }
             event.preventDefault();
         });
+
+        // Mouse click controls
+        this.canvas.addEventListener('click', (event) => {
+            if (this.isGameOver) {
+                this.reset();
+            } else {
+                this.player.jump();
+            }
+            event.preventDefault();
+        });
     }
 
     update() {
@@ -121,7 +131,7 @@ class Game {
             this.ctx.textAlign = 'center';
             this.ctx.fillText('Game Over', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
             this.ctx.font = '24px Arial';
-            this.ctx.fillText('Press Space to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+            this.ctx.fillText('Press Space or Click to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
         }
     }
 
