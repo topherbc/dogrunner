@@ -2,8 +2,7 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.canvas.width = CANVAS_WIDTH;
-        this.canvas.height = CANVAS_HEIGHT;
+        this.setCanvasSize();
         
         this.score = 0;
         this.scoreElement = document.getElementById('score');
@@ -17,10 +16,52 @@ class Game {
         this.obstacleManager = new ObstacleManager(this.ctx);
         
         this.setupEventListeners();
+        this.setupResizeHandler();
         this.gameLoop();
     }
 
+    setCanvasSize() {
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        const isTablet = window.matchMedia("(min-width: 768px) and (max-width: 1024px)").matches;
+        
+        let baseWidth;
+        if (isMobile) {
+            baseWidth = 300;
+        } else if (isTablet) {
+            baseWidth = 600;
+        } else {
+            baseWidth = 800;
+        }
+        
+        // Maintain original aspect ratio (800:300)
+        const aspectRatio = 300/800;
+        this.canvas.width = baseWidth;
+        this.canvas.height = Math.floor(baseWidth * aspectRatio);
+        
+        // Update size-dependent constants
+        const scale = baseWidth / 800; // Scale factor based on original width
+        CANVAS_WIDTH = this.canvas.width;
+        CANVAS_HEIGHT = this.canvas.height;
+        GROUND_HEIGHT = Math.floor(30 * scale);
+        GRAVITY = 0.5 * scale;
+        JUMP_FORCE = -12 * scale;
+        GAME_SPEED = 5 * scale;
+    }
+
+    setupResizeHandler() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.setCanvasSize();
+                this.background = new Background(this.ctx);
+                this.obstacleManager.reset();
+            }, 200);
+        });
+    }
+
     setupEventListeners() {
+        // Keyboard controls
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space') {
                 if (this.isGameOver) {
@@ -30,6 +71,16 @@ class Game {
                 }
                 event.preventDefault();
             }
+        });
+
+        // Touch controls
+        this.canvas.addEventListener('touchstart', (event) => {
+            if (this.isGameOver) {
+                this.reset();
+            } else {
+                this.player.jump();
+            }
+            event.preventDefault();
         });
     }
 
